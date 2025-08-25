@@ -1,0 +1,112 @@
+{
+  "name": "investment-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Investment management platform with mobile and web applications",
+  "author": "Investment App Team",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "postinstall": "pnpm run setup",
+    "setup": "pnpm install --frozen-lockfile && pnpm run build:packages",
+    "clean": "pnpm exec rimraf **/node_modules **/dist **/.turbo **/.next **/.expo **/.metro-cache **/.vite",
+    "clean:cache": "pnpm exec rimraf **/.turbo **/.next **/.expo **/.metro-cache **/.vite",
+    "dev": "concurrently -p \"[{name}]\" -n web,mobile,api -c green,cyan,magenta \"pnpm dev:web\" \"pnpm dev:mobile\" \"pnpm dev:api\"",
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile expo start",
+    "dev:api": "pnpm --filter api dev",
+    "build": "pnpm run build:packages && pnpm run build:apps",
+    "build:packages": "pnpm --filter \"./packages/*\" build",
+    "build:apps": "pnpm --filter \"./apps/*\" build",
+    "build:web": "pnpm --filter web build",
+    "build:mobile": "pnpm --filter mobile expo export",
+    "build:api": "pnpm --filter api build",
+    "test": "pnpm run test:packages && pnpm run test:apps",
+    "test:packages": "pnpm --filter \"./packages/*\" test",
+    "test:apps": "pnpm --filter \"./apps/*\" test",
+    "test:e2e": "pnpm --filter \"./tests/e2e\" test",
+    "lint": "pnpm --filter \"*\" lint",
+    "lint:fix": "pnpm --filter \"*\" lint:fix",
+    "type-check": "pnpm --filter \"*\" type-check",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish",
+    "db:generate": "pnpm --filter api db:generate",
+    "db:push": "pnpm --filter api db:push",
+    "db:seed": "pnpm --filter api db:seed",
+    "db:studio": "pnpm --filter api db:studio",
+    "mobile:ios": "pnpm --filter mobile ios",
+    "mobile:android": "pnpm --filter mobile android",
+    "mobile:build:ios": "pnpm --filter mobile build:ios",
+    "mobile:build:android": "pnpm --filter mobile build:android"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.9",
+    "@expo/prettier-config": "^0.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.13.0",
+    "@typescript-eslint/parser": "^8.13.0",
+    "concurrently": "^9.1.0",
+    "eslint": "^8.57.1",
+    "eslint-config-expo": "^7.1.2",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-native": "^4.1.0",
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.3.3",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "prettier": "@expo/prettier-config",
+  "pnpm": {
+    "overrides": {
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "@types/react": "^18.3.1",
+      "@types/react-dom": "^18.3.1",
+      "@tanstack/react-query": "^5.72.2",
+      "zustand": "5.0.3",
+      "three": "^0.175.0",
+      "yup": "^1.6.1",
+      "date-fns": "^4.1.0",
+      "typescript": "^5.8.3"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "react",
+        "react-dom",
+        "react-native"
+      ],
+      "allowedVersions": {
+        "react": "18",
+        "react-dom": "18"
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/investment-app.git"
+  },
+  "keywords": [
+    "investment",
+    "finance",
+    "react-native",
+    "expo",
+    "react",
+    "monorepo",
+    "typescript"
+  ]
+}
