@@ -9,7 +9,7 @@ import { toast } from 'sonner-native';
 const scheduledNotifications = new Map<
   string,
   {
-    timeoutId: number;
+    timeoutId: ReturnType<typeof setTimeout>;
     request: NotificationRequest;
   }
 >();

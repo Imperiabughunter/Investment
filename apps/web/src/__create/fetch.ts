@@ -12,7 +12,9 @@ const safeStringify = (value: unknown) =>
 const postToParent = (level: string, text: string, extra: unknown) => {
   try {
     if (isBackend() || !window.parent || window.parent === window) {
-      ('level' in console ? console[level] : console.log)(text, extra);
+      // Fix: Type-safe console access
+      const consoleMethod = (console as any)[level] || console.log;
+      consoleMethod(text, extra);
       return;
     }
     window.parent.postMessage(
@@ -36,8 +38,12 @@ const getURlFromArgs = (...args: Parameters<typeof originalFetch>): string => {
     url = urlArg;
   } else if (urlArg instanceof Request) {
     url = urlArg.url;
+  } else if (urlArg instanceof URL) {
+    // Fix: Handle URL objects correctly
+    url = urlArg.href;
   } else {
-    url = `${urlArg.protocol}//${urlArg.host}${urlArg.pathname}`;
+    // Fallback for other cases
+    url = String(urlArg);
   }
   return url;
 };

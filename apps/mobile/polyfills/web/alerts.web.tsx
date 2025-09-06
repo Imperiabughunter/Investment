@@ -296,8 +296,22 @@ export const AlertModal = () => {
 								{modalData.type === 'login-password' ? (
 									<TextInput
 										style={[
-											styles.textInput,
-											styles.textInputTop,
+											{
+												borderWidth: 0.5,
+												borderColor: 'lightgray',
+												borderRadius: 8,
+												paddingHorizontal: 12,
+												paddingVertical: 8,
+												marginTop: 16,
+												marginHorizontal: 12,
+												fontSize: 12,
+												borderTopLeftRadius: 8,
+												borderTopRightRadius: 8,
+												borderBottomLeftRadius: 0,
+												borderBottomRightRadius: 0,
+												borderBottomWidth: 0,
+												marginBottom: 0,
+											},
 											modalData.userInterfaceStyle === 'dark'
 												? {
 														backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -321,11 +335,26 @@ export const AlertModal = () => {
 										autoFocus
 									/>
 								) : null}
-								<TextInput
+				<TextInput
 									style={[
-										styles.textInput,
-										modalData.type === 'login-password' &&
-											styles.textInputBottom,
+										{
+											borderWidth: 0.5,
+											borderColor: 'lightgray',
+											borderRadius: 8,
+											paddingHorizontal: 12,
+											paddingVertical: 8,
+											marginTop: 16,
+											marginBottom: -8,
+											marginHorizontal: 12,
+											fontSize: 12,
+										},
+										modalData.type === 'login-password' && {
+											borderTopLeftRadius: 0,
+											borderTopRightRadius: 0,
+											borderBottomLeftRadius: 8,
+											borderBottomRightRadius: 8,
+											marginTop: 0,
+										},
 										modalData.userInterfaceStyle === 'dark'
 											? {
 													backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -430,7 +459,6 @@ export const AlertModal = () => {
 };
 
 const styling = (userInterfaceStyle: string) =>
-	// @ts-expect-error - outlineStyle is for web only
 	StyleSheet.create({
 		container: {
 			flex: 1,
@@ -438,11 +466,12 @@ const styling = (userInterfaceStyle: string) =>
 			alignItems: 'center',
 			backgroundColor: 'rgba(0,0,0,0.2)',
 		},
-		content: {
-			backdropFilter: 'blur(20px)',
-			borderRadius: 12,
-			width: 244,
-		},
+	content: {
+		// @ts-expect-error - backdropFilter is for web only
+		backdropFilter: 'blur(20px)' as any,
+		borderRadius: 12,
+		width: 244,
+	},
 		contentContainer: {
 			paddingVertical: 20,
 			paddingHorizontal: 12,
@@ -465,18 +494,19 @@ const styling = (userInterfaceStyle: string) =>
 			textAlign: 'center',
 			fontSize: 16,
 		},
-		textInput: {
-			borderWidth: 0.5,
-			borderColor: 'lightgray',
-			borderRadius: 8,
-			paddingHorizontal: 12,
-			paddingVertical: 8,
-			marginTop: 16,
-			marginBottom: -8,
-			marginHorizontal: 12,
-			fontSize: 12,
-			outlineStyle: 'none',
-		},
+	textInput: {
+		borderWidth: 0.5,
+		borderColor: 'lightgray',
+		borderRadius: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+		marginTop: 16,
+		marginBottom: -8,
+		marginHorizontal: 12,
+		fontSize: 12,
+		// @ts-ignore - outlineStyle is for web only
+		outlineStyle: 'none',
+	},
 		textInputTop: {
 			borderTopLeftRadius: 8,
 			borderTopRightRadius: 8,

@@ -166,7 +166,9 @@ pnpm web preview
 
 ## 🔌 API Development
 
-The API is built with **Hono** (lightweight web framework) and runs on **Node.js**.
+### Node.js API
+
+The Node.js API is built with **Hono** (lightweight web framework) and runs on **Node.js**.
 
 ```bash
 # Development server with hot reload
@@ -180,7 +182,24 @@ pnpm build:api
 pnpm api start
 ```
 
+### Python API
+
+The Python API is built with **FastAPI** and provides additional backend functionality.
+
+```bash
+# Navigate to the Python API directory
+cd apps/python_api/src
+
+# Run the development server
+python main.py
+# API available at http://localhost:8000
+# API documentation at http://localhost:8000/docs
+# ReDoc documentation at http://localhost:8000/redoc
+```
+
 ### API Endpoints
+
+#### Node.js API Endpoints
 
 **Health Check:**
 - `GET /health` - Basic health check
@@ -198,10 +217,42 @@ pnpm api start
 - `POST /wallets/deposit` - Deposit funds (protected)
 - `POST /wallets/withdraw` - Withdraw funds (protected)
 
+#### Python API Endpoints
+
+**Root:**
+- `GET /` - API information
+- `GET /docs` - Swagger UI documentation
+- `GET /redoc` - ReDoc documentation
+
+**Health Check:**
+- `GET /health` - API health status
+
+**Authentication:**
+- `POST /auth/login` - User login
+- `POST /auth/register` - User registration
+
+**Users:**
+- `GET /users/me` - Get current user profile (protected)
+- `PUT /users/me` - Update user profile (protected)
+
+**Wallets:**
+- `GET /wallets/balance` - Get wallet balance (protected)
+- `GET /wallets/transactions` - Get transaction history (protected)
+
 **Investments:**
 - `GET /investments/plans` - Get available investment plans
-- `GET /investments/my-investments` - Get user's investments (protected)
+- `GET /investments/my` - Get user's investments (protected)
 - `POST /investments/create` - Create new investment (protected)
+
+**Crypto Deposits:**
+- `GET /crypto-deposits/address` - Generate deposit address (protected)
+- `POST /crypto-deposits/payment` - Create payment request (protected)
+- `GET /crypto-deposits/history` - Get deposit history (protected)
+
+**Admin:**
+- `GET /admin/users` - Get all users (admin only)
+- `GET /admin/investment-plans` - Get all investment plans (admin only)
+- `POST /admin/investment-plans` - Create investment plan (admin only)
 
 ## 🗄️ Database Schema
 
