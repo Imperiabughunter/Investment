@@ -9,29 +9,26 @@ export const useAdmin = () => {
   // Dashboard statistics
   const useDashboardStats = () => {
     return useQuery({
-      queryKey: ['dashboard-stats'],
+      queryKey: ['dashboard', 'stats'],
       queryFn: () => adminService.getDashboardStats(),
       enabled: isAuthenticated,
-      staleTime: 1000 * 60 * 5, // 5 minutes
     });
   };
 
   // User management
   const useUsers = (params?: any) => {
     return useQuery({
-      queryKey: ['users', params],
+      queryKey: ['users', 'list', params],
       queryFn: () => adminService.getUsers(params),
       enabled: isAuthenticated,
-      staleTime: 1000 * 60 * 5, // 5 minutes
     });
   };
 
   const useUserDetails = (userId: string) => {
     return useQuery({
-      queryKey: ['users', userId],
+      queryKey: ['users', 'detail', userId],
       queryFn: () => adminService.getUserDetails(userId),
       enabled: isAuthenticated && !!userId,
-      staleTime: 1000 * 60 * 5, // 5 minutes
     });
   };
 
@@ -40,8 +37,9 @@ export const useAdmin = () => {
       mutationFn: (data: { userId: string; userData: any }) => 
         adminService.updateUser(data.userId, data.userData),
       onSuccess: (_, { userId }) => {
-        queryClient.invalidateQueries({ queryKey: ['users'] });
-        queryClient.invalidateQueries({ queryKey: ['users', userId] });
+        // Invalidate both the list and the specific user detail
+        queryClient.invalidateQueries({ queryKey: ['users', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['users', 'detail', userId] });
       },
     });
   };
@@ -50,7 +48,7 @@ export const useAdmin = () => {
   const usePendingKYC = (params?: any) => {
     return useQuery({
       queryKey: ['pending-kyc', params],
-      queryFn: () => adminService.getPendingKYCVerifications(params),
+      queryFn: () => adminService.getPendingKYC(params),
       enabled: isAuthenticated,
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
@@ -58,7 +56,7 @@ export const useAdmin = () => {
 
   const useApproveKYC = () => {
     return useMutation({
-      mutationFn: (userId: string) => adminService.approveKYCVerification(userId),
+      mutationFn: (userId: string) => adminService.approveKYC(userId),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['pending-kyc'] });
         queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -69,7 +67,7 @@ export const useAdmin = () => {
   const useRejectKYC = () => {
     return useMutation({
       mutationFn: (data: { userId: string; reason: string }) => 
-        adminService.rejectKYCVerification(data.userId, data.reason),
+        adminService.rejectKYC(data.userId, { reason: data.reason }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['pending-kyc'] });
         queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -119,7 +117,7 @@ export const useAdmin = () => {
   const useInvestments = (params?: any) => {
     return useQuery({
       queryKey: ['investments-admin', params],
-      queryFn: () => adminService.getInvestments(params),
+      queryFn: () => adminService.getAllInvestments(params),
       enabled: isAuthenticated,
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
@@ -176,7 +174,7 @@ export const useAdmin = () => {
   const useLoans = (params?: any) => {
     return useQuery({
       queryKey: ['loans-admin', params],
-      queryFn: () => adminService.getLoans(params),
+      queryFn: () => adminService.getAllLoans(params),
       enabled: isAuthenticated,
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
@@ -216,7 +214,7 @@ export const useAdmin = () => {
   const useTransactions = (params?: any) => {
     return useQuery({
       queryKey: ['transactions-admin', params],
-      queryFn: () => adminService.getTransactions(params),
+      queryFn: () => adminService.getAllTransactions(params),
       enabled: isAuthenticated,
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
@@ -235,7 +233,7 @@ export const useAdmin = () => {
   const useWithdrawals = (params?: any) => {
     return useQuery({
       queryKey: ['withdrawals-admin', params],
-      queryFn: () => adminService.getWithdrawals(params),
+      queryFn: () => adminService.getAllWithdrawals(params),
       enabled: isAuthenticated,
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
@@ -243,7 +241,8 @@ export const useAdmin = () => {
 
   const useApproveWithdrawal = () => {
     return useMutation({
-      mutationFn: (withdrawalId: string) => adminService.approveWithdrawal(withdrawalId),
+      mutationFn: (data: { withdrawalId: string; approvalData: any }) => 
+        adminService.approveWithdrawal(data.withdrawalId, data.approvalData),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['withdrawals-admin'] });
       },
@@ -253,7 +252,7 @@ export const useAdmin = () => {
   const useRejectWithdrawal = () => {
     return useMutation({
       mutationFn: (data: { withdrawalId: string; reason: string }) => 
-        adminService.rejectWithdrawal(data.withdrawalId, data.reason),
+        adminService.rejectWithdrawal(data.withdrawalId, { reason: data.reason }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['withdrawals-admin'] });
       },
@@ -264,7 +263,7 @@ export const useAdmin = () => {
   const useSendBroadcastNotification = () => {
     return useMutation({
       mutationFn: (data: { title: string; message: string; userIds?: string[] }) => 
-        adminService.sendBroadcastNotification(data.title, data.message, data.userIds),
+        adminService.sendBroadcastNotification(data),
     });
   };
 

@@ -58,13 +58,15 @@ class TransactionRepository:
         db.refresh(db_transaction)
         return db_transaction
     
-    def update_status(self, db: Session, transaction_id: UUID, status: TransactionStatus) -> Optional[Transaction]:
+    def update_status(self, db: Session, transaction_id: UUID, status: TransactionStatus, rejection_reason: Optional[str] = None) -> Optional[Transaction]:
         """
-        Update transaction status
+        Update transaction status and optionally add rejection reason
         """
         db_transaction = self.get_by_id(db, transaction_id)
         if db_transaction:
             db_transaction.status = status
+            if rejection_reason and status == TransactionStatus.REJECTED:
+                db_transaction.rejection_reason = rejection_reason
             db.commit()
             db.refresh(db_transaction)
         return db_transaction

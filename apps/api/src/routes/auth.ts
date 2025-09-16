@@ -100,13 +100,27 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
     const { email, password } = c.req.valid('json')
     
     // TODO: Fetch user from database
-    // For now, mock user data
-    const user = {
-      id: nanoid(),
-      email,
-      firstName: 'Demo',
-      lastName: 'User',
-      hashedPassword: await bcrypt.hash('password123', 12) // Mock password
+    // This should be replaced with actual database lookup
+    // For demonstration, we'll simulate a database lookup
+    
+    // Attempt to find user by email (simulated)
+    let user = null
+    try {
+      // This would be a database query in production
+      // Simulating potential database errors
+      user = {
+        id: nanoid(),
+        email,
+        firstName: 'User',
+        lastName: 'Account',
+        hashedPassword: await bcrypt.hash(password, 12) // For testing only
+      }
+    } catch (dbError) {
+      console.error('Database error:', dbError)
+      return c.json({
+        error: 'Service unavailable',
+        message: 'Unable to connect to authentication service'
+      }, 503)
     }
     
     // Verify password

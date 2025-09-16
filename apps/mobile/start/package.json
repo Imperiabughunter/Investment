@@ -1,10 +1,10 @@
 {
-  "name": "Prime investment-app",
+  "name": "investment-app",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "Investment management platform with mobile and web applications",
-  "author": "redco",
+  "author": "Investment App Team",
   "license": "MIT",
   "workspaces": [
     "apps/*",
@@ -13,7 +13,7 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "postinstall": "pnpm run setup",
-    "setup": "pnpm install && pnpm run build:packages",
+    "setup": "pnpm install --frozen-lockfile && pnpm run build:packages",
     "clean": "pnpm exec rimraf **/node_modules **/dist **/.turbo **/.next **/.expo **/.metro-cache **/.vite",
     "clean:cache": "pnpm exec rimraf **/.turbo **/.next **/.expo **/.metro-cache **/.vite",
     "dev": "concurrently -p \"[{name}]\" -n web,mobile,api -c green,cyan,magenta \"pnpm dev:web\" \"pnpm dev:mobile\" \"pnpm dev:api\"",

@@ -9,7 +9,7 @@ import os
 from db.database import get_db
 from schemas.schemas import UserCreate, User, Token, TokenData, LoginRequest, RefreshTokenRequest
 from services.auth_service import AuthService
-from core.security import create_access_token, create_refresh_token, verify_refresh_token
+from core.security import create_access_token, create_refresh_token, verify_refresh_token, get_password_hash
 
 router = APIRouter()
 auth_service = AuthService()
@@ -180,19 +180,55 @@ async def forgot_password(email: str = Body(..., embed=True), db: Session = Depe
     user = auth_service.get_user_by_email(db, email=email)
     if not user:
         # Don't reveal that the user doesn't exist
-        return {"message": "If your email is registered, you will receive a password reset link"}
+        return {"success": True, "message": "If your email is registered, you will receive a password reset link"}
     
-    # In a real implementation, send an email with a reset token
-    # For now, just return a success message
-    return {"message": "If your email is registered, you will receive a password reset link"}
+    # Generate a reset token
+    reset_token = create_access_token(
+        data={"sub": str(user.id), "purpose": "password_reset"},
+        expires_delta=timedelta(hours=1)  # Token expires in 1 hour
+    )
+    
+    # In a real implementation, send an email with the reset token
+    # For demonstration, we'll just return the token in the response
+    # In production, you would use an email service to send this token
+    
+    return {"success": True, "message": "If your email is registered, you will receive a password reset link", "token": reset_token}
 
 # Reset password
-@router.post("/reset-password/{token}")
+@router.post("/reset-password")
 async def reset_password(
-    token: str,
-    new_password: str = Body(..., embed=True),
+    token: str = Body(...),
+    new_password: str = Body(...),
     db: Session = Depends(get_db)
 ):
-    # In a real implementation, verify the token and update the password
-    # For now, just return a success message
-    return {"message": "Password has been reset successfully"}
+    try:
+        # Verify the token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        purpose = payload.get("purpose")
+        
+        if not user_id or purpose != "password_reset":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid token"
+            )
+            
+        # Get the user
+        user = auth_service.get_user_by_id(db, user_id=user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+            
+        # Update the password
+        hashed_password = get_password_hash(new_password)
+        user.hashed_password = hashed_password
+        db.commit()
+        
+        return {"success": True, "message": "Password has been reset successfully"}
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired token",
+        )

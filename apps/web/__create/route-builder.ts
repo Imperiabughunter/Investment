@@ -51,13 +51,22 @@ function getHonoPath(routeFile: string): { name: string; pattern: string }[] {
     return [{ name: 'root', pattern: '' }];
   }
   const transformedParts = routeParts.map((segment) => {
-    const match = segment.match(/^\[(\.{3})?([^\]]+)\]$/);
-    if (match) {
-      const [_, dots, param] = match;
-      return dots === '...'
-        ? { name: param, pattern: `:${param}{.+}` }
-        : { name: param, pattern: `:${param}` };
+    // Handle catch-all parameters [...param]
+    if (segment.match(/^\[\.\.\.[^\]]+\]$/)) {
+      const param = segment.slice(4, -1);
+      return { name: param, pattern: `:${param}{.*}` };
     }
+    // Handle optional parameters [[param]]
+    else if (segment.match(/^\[\[[^\]]+\]\]$/)) {
+      const param = segment.slice(2, -2);
+      return { name: param, pattern: `:${param}?` };
+    }
+    // Handle regular parameters [param]
+    else if (segment.match(/^\[[^\]]+\]$/)) {
+      const param = segment.slice(1, -1);
+      return { name: param, pattern: `:${param}` };
+    }
+    // Regular path segment
     return { name: segment, pattern: segment };
   });
   return transformedParts;

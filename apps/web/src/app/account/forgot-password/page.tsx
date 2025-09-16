@@ -1,9 +1,10 @@
+'use client';
+
 import { useState, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { authService } from "@/services";
+import authService from "@/services/authService";
+import { Link } from "react-router-dom";
 
 function ForgotPasswordPage() {
-  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,10 +22,23 @@ function ForgotPasswordPage() {
     }
 
     try {
-      await authService.requestPasswordReset(email);
-      setSuccess(true);
+      const response = await authService.requestPasswordReset(email);
+      if (response.success) {
+        setSuccess(true);
+      } else {
+        setError("Failed to send reset link. Please try again.");
+      }
     } catch (err: any) {
-      setError(err?.message || "Something went wrong. Please try again.");
+      // Check for specific error messages related to network or server issues
+      if (err?.message?.includes("fetch") || 
+          err?.message?.includes("network") || 
+          err?.message?.includes("connect") || 
+          err?.message?.includes("timeout") || 
+          err?.message?.includes("unavailable")) {
+        setError("Cannot connect to the server. Please check your network connection and try again later.");
+      } else {
+        setError(err?.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -45,12 +59,12 @@ function ForgotPasswordPage() {
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm mb-6">
               Password reset instructions have been sent to your email address.
             </div>
-            <button
-              onClick={() => navigate("/account/signin")}
-              className="w-full bg-[#FF7B00] text-white py-3 px-4 rounded-lg font-medium hover:bg-orange-600 focus:ring-2 focus:ring-orange-300 transition-colors"
+            <Link
+              to="/account/signin"
+              className="w-full bg-[#FF7B00] text-white py-3 px-4 rounded-lg font-medium hover:bg-orange-600 focus:ring-2 focus:ring-orange-300 transition-colors inline-block text-center"
             >
               Back to Sign In
-            </button>
+            </Link>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-6">
@@ -69,8 +83,11 @@ function ForgotPasswordPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{error}</span>
               </div>
             )}
 
@@ -87,12 +104,12 @@ function ForgotPasswordPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Remember your password?{" "}
-            <a
+            <Link
               href="/account/signin"
               className="text-[#FF7B00] hover:text-orange-600 font-medium"
             >
               Sign in
-            </a>
+            </Link>
           </p>
         </div>
       </div>

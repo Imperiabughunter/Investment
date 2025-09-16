@@ -65,14 +65,46 @@ async def root():
 async def http_exception_handler(request, exc):
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail},
+        content={
+            "detail": exc.detail,
+            "status_code": exc.status_code,
+            "path": request.url.path,
+            "method": request.method,
+            "type": "http_exception"
+        },
+    )
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request, exc):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "detail": str(exc),
+            "status_code": status.HTTP_400_BAD_REQUEST,
+            "path": request.url.path,
+            "method": request.method,
+            "type": "value_error"
+        },
     )
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
+    # Log the exception for server-side debugging
+    import traceback
+    error_details = traceback.format_exc()
+    print(f"Unhandled exception: {error_details}")
+    
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Internal server error"},
+        content={
+            "detail": "Internal server error",
+            "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "path": request.url.path,
+            "method": request.method,
+            "type": "server_error",
+            # Don't expose error details in production
+            "error_type": exc.__class__.__name__ if os.getenv("ENVIRONMENT") != "production" else None
+        },
     )
 
 if __name__ == "__main__":

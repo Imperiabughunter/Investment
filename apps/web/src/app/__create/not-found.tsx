@@ -11,7 +11,14 @@ export async function loader({ params }: Route.LoaderArgs) {
       .sort((a, b) => a.length - b.length)
       .map((match) => {
         const url = match.replace('src/app', '').replace(/\/page\.(js|jsx|ts|tsx)$/, '') || '/';
-        const path = url.replaceAll('[', '').replaceAll(']', '');
+        // Properly format the path for display by handling all parameter types
+        let path = url;
+        // Handle catch-all parameters [...param]
+        path = path.replace(/\[\.\.\.([^\]]+)\]/g, ':$1*');
+        // Handle optional parameters [[param]]
+        path = path.replace(/\[\[([^\]]+)\]\]/g, ':$1?');
+        // Handle regular parameters [param]
+        path = path.replace(/\[([^\]]+)\]/g, ':$1');
         const displayPath = path === '/' ? 'Homepage' : path;
         return { url, path: displayPath };
       }),

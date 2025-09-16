@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ArrowUpIcon, ArrowDownIcon, UsersIcon, BanknotesIcon, CreditCardIcon, ClockIcon } from 'lucide-react';
+import lucideReact from 'lucide-react';
+const { ArrowUpIcon, ArrowDownIcon, UsersIcon, BanknotesIcon, CreditCardIcon, ClockIcon } = lucideReact;
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 

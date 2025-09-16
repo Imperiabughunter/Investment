@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import useUser from '@/utils/useUser';
+import { userService } from '@/services';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, BarChart, PieChart } from '@/components/charts';
@@ -26,11 +27,8 @@ export default function UserDashboard() {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await fetch('/api/user/dashboard-stats');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
+      const data = await userService.getDashboardStats();
+      setStats(data);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
     } finally {

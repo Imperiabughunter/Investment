@@ -113,6 +113,28 @@ async def delete_user(
     user_service.delete_user(db, user_id)
     return None
 
+@router.put("/users/{user_id}/deactivate", response_model=User)
+async def deactivate_user(
+    user_id: UUID = Path(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    user = user_service.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user_service.deactivate_user(db, user_id)
+
+@router.put("/users/{user_id}/activate", response_model=User)
+async def activate_user(
+    user_id: UUID = Path(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    user = user_service.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user_service.activate_user(db, user_id)
+
 # Admin dependency - require admin role
 async def get_current_admin(
     current_user: User = Depends(get_current_user),
@@ -400,7 +422,7 @@ async def reject_loan(
     return loan_service.reject_loan(db, loan_id, rejection_reason)
 
 # Transaction Management Endpoints
-@router.get("/transactions", response_model=List[dict])
+@router.get("/transactions", response_model=List[Transaction])
 async def get_all_transactions(
     skip: int = 0,
     limit: int = 100,
@@ -410,7 +432,7 @@ async def get_all_transactions(
 ):
     return wallet_service.get_all_transactions(db, skip=skip, limit=limit, status=status)
 
-@router.get("/transactions/{transaction_id}", response_model=dict)
+@router.get("/transactions/{transaction_id}", response_model=Transaction)
 async def get_transaction(
     transaction_id: UUID = Path(...),
     db: Session = Depends(get_db),
@@ -421,7 +443,7 @@ async def get_transaction(
         raise HTTPException(status_code=404, detail="Transaction not found")
     return transaction
 
-@router.put("/transactions/{transaction_id}/approve", response_model=dict)
+@router.put("/transactions/{transaction_id}/approve", response_model=Transaction)
 async def approve_transaction(
     transaction_id: UUID = Path(...),
     db: Session = Depends(get_db),
@@ -430,9 +452,12 @@ async def approve_transaction(
     transaction = wallet_service.get_transaction(db, transaction_id)
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    return wallet_service.approve_transaction(db, transaction_id)
+    updated_transaction = wallet_service.approve_transaction(db, transaction_id)
+    if not updated_transaction:
+        raise HTTPException(status_code=400, detail="Transaction could not be approved. It may not be in pending status.")
+    return updated_transaction
 
-@router.put("/transactions/{transaction_id}/reject", response_model=dict)
+@router.put("/transactions/{transaction_id}/reject", response_model=Transaction)
 async def reject_transaction(
     transaction_id: UUID = Path(...),
     rejection_reason: str = Body(..., embed=True),
@@ -442,10 +467,13 @@ async def reject_transaction(
     transaction = wallet_service.get_transaction(db, transaction_id)
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    return wallet_service.reject_transaction(db, transaction_id, rejection_reason)
+    updated_transaction = wallet_service.reject_transaction(db, transaction_id, rejection_reason)
+    if not updated_transaction:
+        raise HTTPException(status_code=400, detail="Transaction could not be rejected. It may not be in pending status.")
+    return updated_transaction
 
 # Withdrawal Management Endpoints
-@router.get("/withdrawals", response_model=List[dict])
+@router.get("/withdrawals", response_model=List[Transaction])
 async def get_all_withdrawals(
     skip: int = 0,
     limit: int = 100,
@@ -455,7 +483,7 @@ async def get_all_withdrawals(
 ):
     return wallet_service.get_all_withdrawals(db, skip=skip, limit=limit, status=status)
 
-@router.get("/withdrawals/{withdrawal_id}", response_model=dict)
+@router.get("/withdrawals/{withdrawal_id}", response_model=Transaction)
 async def get_withdrawal(
     withdrawal_id: UUID = Path(...),
     db: Session = Depends(get_db),
@@ -466,7 +494,7 @@ async def get_withdrawal(
         raise HTTPException(status_code=404, detail="Withdrawal not found")
     return withdrawal
 
-@router.put("/withdrawals/{withdrawal_id}/approve", response_model=dict)
+@router.put("/withdrawals/{withdrawal_id}/approve", response_model=Transaction)
 async def approve_withdrawal(
     withdrawal_id: UUID = Path(...),
     db: Session = Depends(get_db),
@@ -475,9 +503,12 @@ async def approve_withdrawal(
     withdrawal = wallet_service.get_withdrawal(db, withdrawal_id)
     if not withdrawal:
         raise HTTPException(status_code=404, detail="Withdrawal not found")
-    return wallet_service.approve_withdrawal(db, withdrawal_id)
+    updated_withdrawal = wallet_service.approve_withdrawal(db, withdrawal_id)
+    if not updated_withdrawal:
+        raise HTTPException(status_code=400, detail="Withdrawal could not be approved. It may not be in pending status.")
+    return updated_withdrawal
 
-@router.put("/withdrawals/{withdrawal_id}/reject", response_model=dict)
+@router.put("/withdrawals/{withdrawal_id}/reject", response_model=Transaction)
 async def reject_withdrawal(
     withdrawal_id: UUID = Path(...),
     rejection_reason: str = Body(..., embed=True),
@@ -487,7 +518,10 @@ async def reject_withdrawal(
     withdrawal = wallet_service.get_withdrawal(db, withdrawal_id)
     if not withdrawal:
         raise HTTPException(status_code=404, detail="Withdrawal not found")
-    return wallet_service.reject_withdrawal(db, withdrawal_id, rejection_reason)
+    updated_withdrawal = wallet_service.reject_withdrawal(db, withdrawal_id, rejection_reason)
+    if not updated_withdrawal:
+        raise HTTPException(status_code=400, detail="Withdrawal could not be rejected. It may not be in pending status.")
+    return updated_withdrawal
 
 # Notification Endpoints
 @router.get("/notifications", response_model=List[dict])

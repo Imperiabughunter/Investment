@@ -1,33 +1,36 @@
 import * as React from 'react';
-import { useSession } from "@auth/create/react";
-
+import authService from '../services/authService';
 
 const useUser = () => {
-  const { data: session, status } = useSession();
-  const id = session?.user?.id
+  const [user, setUser] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
 
-  const [user, setUser] = React.useState(session?.user ?? null);
-
-  const fetchUser = React.useCallback(async (session) => {
-  return session?.user;
-}, [])
-
-  const refetchUser = React.useCallback(() => {
-    if(process.env.NEXT_PUBLIC_CREATE_ENV === "PRODUCTION") {
-      if (id) {
-        fetchUser(session).then(setUser);
-      } else {
-        setUser(null);
+  const fetchUser = React.useCallback(async () => {
+    try {
+      // Get user from localStorage
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        return JSON.parse(userStr);
       }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return null;
     }
-  }, [fetchUser, id])
+  }, []);
 
-  React.useEffect(refetchUser, [refetchUser]);
+  const refetchUser = React.useCallback(async () => {
+    setLoading(true);
+    const userData = await fetchUser();
+    setUser(userData);
+    setLoading(false);
+  }, [fetchUser]);
 
-  if (process.env.NEXT_PUBLIC_CREATE_ENV !== "PRODUCTION") {
-    return { user, data: session?.user || null, loading: status === 'loading', refetch: refetchUser };
-  }
-  return { user, data: user, loading: status === 'loading' || (status === 'authenticated' && !user), refetch: refetchUser };
+  React.useEffect(() => {
+    refetchUser();
+  }, [refetchUser]);
+
+  return { user, data: user, loading, refetch: refetchUser };
 };
 
 export { useUser }

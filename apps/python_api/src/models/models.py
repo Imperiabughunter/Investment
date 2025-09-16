@@ -27,6 +27,7 @@ class TransactionStatus(str, enum.Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+    REJECTED = "rejected"
 
 class DocumentType(str, enum.Enum):
     ID_CARD = "id_card"
@@ -212,6 +213,7 @@ class Transaction(Base):
     status = Column(Enum(TransactionStatus), default=TransactionStatus.PENDING)
     description = Column(String, nullable=True)
     reference = Column(String, nullable=True)  # External reference (e.g., crypto tx hash)
+    rejection_reason = Column(String, nullable=True)  # Reason for rejection if status is REJECTED
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

@@ -54,6 +54,12 @@ class UserService:
         Deactivate a user
         """
         return self.user_repository.update(db, user_id, is_active=False)
+        
+    def activate_user(self, db: Session, user_id: UUID) -> Optional[User]:
+        """
+        Activate a user
+        """
+        return self.user_repository.update(db, user_id, is_active=True)
     
     def delete_user(self, db: Session, user_id: UUID) -> bool:
         """

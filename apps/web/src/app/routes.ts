@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -52,7 +52,7 @@ function buildRouteTree(dir: string, basePath = ''): Tree {
 			const childPath = basePath ? `${basePath}/${file}` : file;
 			const childNode = buildRouteTree(filePath, childPath);
 			node.children.push(childNode);
-		} else if (file === 'page.jsx') {
+		} else if (file === 'page.tsx' || file === 'page.jsx') {
 			node.hasPage = true;
     }
 	}
@@ -64,8 +64,14 @@ function generateRoutes(node: Tree): RouteConfigEntry[] {
 	const routes: RouteConfigEntry[] = [];
 
 	if (node.hasPage) {
+		// Check for both .tsx and .jsx files
+		const hasPageTsx = node.path === '' ? 
+			existsSync(join(__dirname, `${node.path}page.tsx`)) :
+			existsSync(join(__dirname, `${node.path}/page.tsx`));
+		
+		const extension = hasPageTsx ? 'tsx' : 'jsx';
 		const componentPath =
-			node.path === '' ? `./${node.path}page.jsx` : `./${node.path}/page.jsx`;
+			node.path === '' ? `./${node.path}page.${extension}` : `./${node.path}/page.${extension}`;
 
 		if (node.path === '') {
 			routes.push(index(componentPath));
@@ -76,18 +82,19 @@ function generateRoutes(node: Tree): RouteConfigEntry[] {
 			// Replace all parameter segments in the path
 			const segments = routePath.split('/');
 			const processedSegments = segments.map((segment) => {
-				if (segment.startsWith('[') && segment.endsWith(']')) {
+				// Handle catch-all parameters (e.g., [...ids] becomes *)
+				if (segment.startsWith('[...') && segment.endsWith(']')) {
+					const paramName = segment.slice(4, -1);
+					return '*'; // React Router's catch-all syntax
+				}
+				// Handle optional parameters (e.g., [[id]] becomes :id?)
+				else if (segment.startsWith('[[') && segment.endsWith(']]')) {
+					const paramName = segment.slice(2, -2);
+					return `:${paramName}?`;
+				}
+				// Handle regular parameters (e.g., [id] becomes :id)
+				else if (segment.startsWith('[') && segment.endsWith(']')) {
 					const paramName = segment.slice(1, -1);
-
-					// Handle catch-all parameters (e.g., [...ids] becomes *)
-					if (paramName.startsWith('...')) {
-						return '*'; // React Router's catch-all syntax
-					}
-					// Handle optional parameters (e.g., [[id]] becomes :id?)
-					if (paramName.startsWith('[') && paramName.endsWith(']')) {
-						return `:${paramName.slice(1, -1)}?`;
-					}
-					// Handle regular parameters (e.g., [id] becomes :id)
 					return `:${paramName}`;
 				}
 				return segment;
@@ -105,7 +112,7 @@ function generateRoutes(node: Tree): RouteConfigEntry[] {
 	return routes;
 }
 if (import.meta.env.DEV) {
-	import.meta.glob('./**/page.jsx', {});
+	import.meta.glob('./**/page.{jsx,tsx}', {});
 	if (import.meta.hot) {
 		import.meta.hot.accept((newSelf) => {
 			import.meta.hot?.invalidate();

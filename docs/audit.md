@@ -196,5 +196,68 @@ If issues persist after implementing fixes:
 3. Verify all environment variables are set
 4. Review this audit for missed dependencies
 
+## 2025-09-06 - Alembic Migration Path Error and Fix
+
+**Error encountered:**
+```
+FAILED: No 'script_location' key found in configuration.
+```
+
+**Root cause analysis:**
+Alembic could not find the migration scripts because the `script_location` was not set or the `migrations/versions` directory did not exist.
+
+**Resolution:**
+- Verified that `alembic.ini` had `script_location = migrations`.
+- Created the missing `migrations/versions` directory.
+- Re-ran `alembic upgrade head` to apply migrations.
+
+**Instructions for future issues:**
+- Ensure `alembic.ini` has the correct `script_location`.
+- The `migrations/versions` directory must exist for Alembic to track migration scripts.
+- If you see this error, create the missing directory and retry the migration command.
+
 ---
-*This audit was generated automatically. Review all actions before implementing.*
+
+## 2025-09-07 Web Frontend Routing Issue
+
+**Error encountered:**
+Web application routing was not properly handling dynamic route parameters, causing navigation issues with parameterized routes.
+
+**Root cause analysis:**
+The route parameter handling in multiple files had regex pattern issues that prevented proper parsing of:
+- Catch-all parameters (e.g., [...slug])
+- Optional parameters (e.g., [[id]])
+- Regular parameters (e.g., [id])
+
+**Resolution:**
+- Fixed route-builder.ts to properly handle all parameter types with correct regex patterns
+- Updated routes.ts to correctly process route segments with improved conditional logic
+- Enhanced not-found.tsx to display route parameters in a more user-friendly format
+
+**Instructions for future issues:**
+- When adding new route types, ensure the parameter handling logic is updated in all three files
+- Test all parameter types (regular, optional, and catch-all) when making routing changes
+- Check both client-side and API routes when troubleshooting routing problems
+
+---
+
+## 2025-09-07 Authentication Configuration Issue
+
+**Error encountered:**
+```
+TypeError: Cannot read properties of undefined (reading 'secret')
+```
+
+**Root cause analysis:**
+The Auth.js configuration was failing because the AUTH_SECRET environment variable was set to a JWT token format which is not compatible with what Auth.js expects. This caused authentication to fail when trying to sign in.
+
+**Resolution:**
+- Updated the AUTH_SECRET in the .env file to use a simple string format
+- Created a script to add a default admin user with credentials: email: admin@platform.com, password: admin
+
+**Instructions for future issues:**
+- Ensure AUTH_SECRET is a simple string, not a JWT token
+- When authentication errors occur, check the .env file for proper configuration
+- Use the scripts/create-admin.js script to recreate the admin user if needed
+
+
