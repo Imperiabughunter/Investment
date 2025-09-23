@@ -1,0 +1,7 @@
+{
+  "name": "lucide-react-mock",
+  "version": "1.0.0",
+  "description": "Mock implementation of lucide-react",
+  "main": "index.js",
+  "type": "module"
+}

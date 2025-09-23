@@ -5,7 +5,7 @@ from uuid import UUID
 from datetime import datetime
 
 from db.database import get_db
-from schemas.schemas import User, UserUpdate, UserRole, Document, DocumentStatus, Investment, InvestmentStatus, InvestmentPlan
+from schemas.schemas import User, UserUpdate, UserRole, Document, DocumentStatus, Investment, InvestmentStatus, InvestmentPlan, TransactionStatus, Transaction
 from services.user_service import UserService
 from services.document_service import DocumentService
 from services.investment_service import InvestmentService
@@ -14,6 +14,17 @@ from services.wallet_service import WalletService
 from services.notification_service import NotificationService
 from services.audit_service import AuditService
 from routers.auth import get_current_user, get_current_superuser
+
+# Admin dependency - require admin role
+async def get_current_admin(
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != UserRole.ADMIN and current_user.role != UserRole.SUPERUSER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized"
+        )  
+    return current_user
 
 router = APIRouter()
 user_service = UserService()
@@ -134,17 +145,6 @@ async def activate_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user_service.activate_user(db, user_id)
-
-# Admin dependency - require admin role
-async def get_current_admin(
-    current_user: User = Depends(get_current_user),
-):
-    if current_user.role != UserRole.ADMIN and current_user.role != UserRole.SUPERUSER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized"
-        )
-    return current_user
 
 # Superuser dependency - require superuser role
 async def get_current_superuser(
@@ -288,6 +288,62 @@ async def delete_investment_plan(
         raise HTTPException(status_code=404, detail="Investment plan not found")
     investment_service.delete_plan(db, plan_id)
     return None
+
+# Transaction Management Endpoints
+@router.get("/transactions", response_model=List)
+async def get_all_transactions(
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[TransactionStatus] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    return wallet_service.get_all_transactions(db, skip=skip, limit=limit, status=status)
+
+@router.get("/transactions/{transaction_id}")
+async def get_transaction(
+    transaction_id: UUID = Path(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    transaction = wallet_service.get_transaction(db, transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return transaction
+
+@router.put("/transactions/{transaction_id}/status")
+async def update_transaction_status(
+    transaction_id: UUID = Path(...),
+    status: TransactionStatus = Body(..., embed=True),
+    rejection_reason: Optional[str] = Body(None, embed=True),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    transaction = wallet_service.get_transaction(db, transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    
+    if status == TransactionStatus.COMPLETED:
+        updated_transaction = wallet_service.approve_transaction(db, transaction_id)
+    elif status == TransactionStatus.REJECTED:
+        updated_transaction = wallet_service.reject_transaction(db, transaction_id, rejection_reason)
+    else:
+        # For other status changes, just update the status
+        updated_transaction = wallet_service.transaction_repository.update_status(db, transaction_id, status)
+    
+    if not updated_transaction:
+        raise HTTPException(status_code=400, detail="Failed to update transaction status")
+    
+    # Log the action
+    audit_service.log_action(
+        db, 
+        user_id=current_user.id, 
+        action=f"Updated transaction {transaction_id} status to {status}",
+        entity_type="transaction",
+        entity_id=str(transaction_id)
+    )
+    
+    return updated_transaction
 
 # Investment Management Endpoints
 @router.get("/investments", response_model=List[Investment])

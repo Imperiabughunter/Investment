@@ -1,5 +1,5 @@
 {
-  "name": "Prime investment-app",
+  "name": "prime-investment-app",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -64,7 +64,7 @@
     "turbo": "^2.3.3",
     "typescript": "^5.8.3"
   },
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@10.17.0",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"

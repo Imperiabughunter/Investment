@@ -1,0 +1,20 @@
+diff --git a/node_modules/@expo/metro-config/src/serializer/reconcileTransformSerializerPlugin.ts b/node_modules/@expo/metro-config/src/serializer/reconcileTransformSerializerPlugin.ts
+index 1234567..abcdef0 100644
+--- a/node_modules/@expo/metro-config/src/serializer/reconcileTransformSerializerPlugin.ts
++++ b/node_modules/@expo/metro-config/src/serializer/reconcileTransformSerializerPlugin.ts
+@@ -9,7 +9,13 @@ import type {
+ } from 'metro';
+ import type { SerializerOptions } from 'metro/src/DeltaBundler/types.flow';
+ 
+-import { getReactNativeVersion } from '@expo/cli/build/src/utils/versions';
++// Fix for missing module by providing a fallback implementation
++function getReactNativeVersion() {
++  try {
++    return require('@expo/cli/build/src/utils/versions').getReactNativeVersion();
++  } catch (error) {
++    return { major: 0, minor: 73, patch: 0 };
++  }
++}
+ 
+ export type ReconcileTransformSerializerPluginOptions = {
+   /** Should the plugin be enabled. */

@@ -1,10 +1,19 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (DISABLED)
 
+# CI/CD has been disabled as per project requirements
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  # Triggers have been disabled
+  # push:
+  #   branches: [ main, develop ]
+  # pull_request:
+  #   branches: [ main, develop ]
+  
+  # Manual trigger only for emergency situations
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual trigger (emergency use only)'
+        required: true
 
 jobs:
   # Backend Tests

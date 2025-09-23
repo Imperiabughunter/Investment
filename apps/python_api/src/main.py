@@ -17,7 +17,7 @@ from tasks.celery_app import celery_app
 
 # Create FastAPI app
 app = FastAPI(
-    title="Prime Investment Platform API",
+    title="Prime Prime Investments API",
     description="API for Prime Investment and Lending Platform",
     version="1.0.0",
     docs_url="/docs",
@@ -54,7 +54,7 @@ app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 @app.get("/", tags=["Root"])
 async def root():
     return {
-        "message": "Prime Investment Platform API",
+        "message": "Prime Prime Investments API",
         "version": "1.0.0",
         "status": "running",
         "documentation": "/docs",

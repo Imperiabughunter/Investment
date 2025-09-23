@@ -12,6 +12,31 @@ const {
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
+// Performance optimizations
+config.maxWorkers = 4;
+
+// Fix for TerminalReporter path issue
+// Provide a minimal reporter implementation directly
+config.reporter = {
+  update: () => {},
+  log: (message) => console.log(message)
+};
+
+// Add .cjs extension support
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'cjs'];
+config.transformer.minifierConfig = {
+  compress: { drop_console: true },
+};
+config.transformer.assetPlugins = ['expo-asset/tools/hashAssetFiles'];
+config.server.port = 8081;
+config.server.enhanceMiddleware = (middleware) => {
+  return (req, res, next) => {
+    // Add a longer timeout for Metro bundler requests
+    req.setTimeout(30000);
+    return middleware(req, res, next);
+  };
+};
+
 const WEB_ALIASES = {
   'expo-secure-store': path.resolve(__dirname, './polyfills/web/secureStore.web.ts'),
   'react-native-webview': path.resolve(__dirname, './polyfills/web/webview.web.tsx'),
@@ -48,7 +73,21 @@ const NATIVE_ALIASES = {
 const SHARED_ALIASES = {
   'expo-image': path.resolve(__dirname, './polyfills/shared/expo-image.tsx'),
 };
+
+// Fix for @expo/cli module resolution error
+const EXPO_CLI_ALIASES = {
+  '@expo/cli/build/src/utils/versions': path.resolve(__dirname, './__create/expo-cli-version-fix.js'),
+};
 fs.mkdirSync(VIRTUAL_ROOT_UNRESOLVED, { recursive: true });
+
+// Add EXPO_CLI_ALIASES to resolver extraNodeModules
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  ...WEB_ALIASES,
+  ...NATIVE_ALIASES,
+  ...SHARED_ALIASES,
+  ...EXPO_CLI_ALIASES,
+};
 config.watchFolders = [...config.watchFolders, VIRTUAL_ROOT, VIRTUAL_ROOT_UNRESOLVED];
 
 // Add web-specific alias configuration through resolveRequest
@@ -68,6 +107,11 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     }
     if (SHARED_ALIASES[moduleName] && !moduleName.startsWith('./polyfills/')) {
       return context.resolveRequest(context, SHARED_ALIASES[moduleName], platform);
+    }
+    
+    // Apply Expo CLI aliases for module resolution fix
+    if (EXPO_CLI_ALIASES[moduleName]) {
+      return context.resolveRequest(context, EXPO_CLI_ALIASES[moduleName], platform);
     }
     if (platform === 'web') {
       // Only apply aliases if the module is one of our polyfills
@@ -116,5 +160,69 @@ config.reporter = {
     return event;
   },
 };
+
+// Timeout and performance optimizations
+config.server = {
+  ...config.server,
+  port: process.env.EXPO_METRO_PORT || 8081,
+  enhanceMiddleware: (middleware) => {
+    return (req, res, next) => {
+      // Increase timeout for all requests
+      req.setTimeout(120000); // 2 minutes
+      return middleware(req, res, next);
+    };
+  },
+};
+
+// Increase worker count for faster builds
+config.maxWorkers = 4;
+
+// Timeout and performance optimizations
+config.server = {
+  ...config.server,
+  port: process.env.EXPO_METRO_PORT || 8081,
+  enhanceMiddleware: (middleware) => {
+    return (req, res, next) => {
+      // Increase timeout for all requests
+      req.setTimeout(120000); // 2 minutes
+      return middleware(req, res, next);
+    };
+  },
+};
+
+// Increase worker count for faster builds
+config.maxWorkers = 4;
+
+// Timeout and performance optimizations
+config.server = {
+  ...config.server,
+  port: process.env.EXPO_METRO_PORT || 8081,
+  enhanceMiddleware: (middleware) => {
+    return (req, res, next) => {
+      // Increase timeout for all requests
+      req.setTimeout(120000); // 2 minutes
+      return middleware(req, res, next);
+    };
+  },
+};
+
+// Increase worker count for faster builds
+config.maxWorkers = 4;
+
+// Timeout and performance optimizations
+config.server = {
+  ...config.server,
+  port: process.env.EXPO_METRO_PORT || 8081,
+  enhanceMiddleware: (middleware) => {
+    return (req, res, next) => {
+      // Increase timeout for all requests
+      req.setTimeout(120000); // 2 minutes
+      return middleware(req, res, next);
+    };
+  },
+};
+
+// Increase worker count for faster builds
+config.maxWorkers = 4;
 
 module.exports = config;

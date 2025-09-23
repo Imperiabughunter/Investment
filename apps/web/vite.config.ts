@@ -13,16 +13,28 @@ import { nextPublicProcessEnv } from './plugins/nextPublicProcessEnv';
 import { restart } from './plugins/restart';
 import { restartEnvFileChange } from './plugins/restartEnvFileChange';
 import { increaseTimeout } from './plugins/increaseTimeout';
+import { honoFetchPatch } from './plugins/hono-fetch-patch';
+import { lucideReactPatch } from './plugins/lucide-react-patch';
 
 export default defineConfig({
   envPrefix: 'NEXT_PUBLIC_',
   logLevel: 'info',
+  resolve: {
+    alias: {
+      'lucide-react': path.resolve(__dirname, 'src/lucide-react')
+    }
+  },
+  build: {
+    target: 'esnext', // Enable top-level await support
+  },
   plugins: [
+    lucideReactPatch(),
+    honoFetchPatch(),
     increaseTimeout(),
     nextPublicProcessEnv(),
     restartEnvFileChange(),
     reactRouterHonoServer({
-      serverEntryPoint: './__create/index.ts',
+      serverEntryPoint: './__create/index-optimized.ts',
       runtime: 'node',
       timeout: 120000, // 2 minutes
     }),
@@ -107,9 +119,15 @@ export default defineConfig({
       define: {
         global: 'globalThis',
       },
+      target: 'esnext', // Enable top-level await support
+      supported: {
+        'top-level-await': true
+      },
       tsconfigRaw: {
         compilerOptions: {
           experimentalDecorators: true,
+          target: "esnext",
+          module: "esnext",
         },
       },
     },

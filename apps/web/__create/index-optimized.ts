@@ -10,7 +10,15 @@ import { Hono } from 'hono';
 import { contextStorage } from 'hono/context-storage';
 import { cors } from 'hono/cors';
 import { requestId } from 'hono/request-id';
-import { serializeError } from 'serialize-error';
+import * as serializeErrorModule from 'serialize-error';
+
+// Apply Hono fix to ensure app.fetch is available
+if (!Hono.prototype.fetch) {
+  Hono.prototype.fetch = function(request, env, executionContext) {
+    return this.request(request, env, executionContext);
+  };
+  console.log('Patched Hono.prototype.fetch globally');
+}
 import ws from 'ws';
 import createOptimizedAdapter from './adapter-optimized';
 import { getHTMLForErrorPage } from './get-html-for-error-page';
@@ -18,6 +26,8 @@ import { API_BASENAME } from './route-builder';
 
 // Configure Neon database
 neonConfig.webSocketConstructor = ws;
+
+const serializeError = serializeErrorModule.serializeError;
 
 // Setup async local storage for request ID tracking
 const als = new AsyncLocalStorage<{ requestId: string }>();
@@ -46,6 +56,19 @@ const adapter = createOptimizedAdapter(pool);
 
 // Create Hono app
 const app = new Hono();
+
+// Fix for "app.fetch is not a function" error
+// Define it directly on the app instance
+app.fetch = function(request, env, executionContext) {
+  return this.request(request, env, executionContext);
+};
+
+// Also define it on the prototype to ensure it's available for all instances
+if (!Hono.prototype.fetch) {
+  Hono.prototype.fetch = function(request, env, executionContext) {
+    return this.request(request, env, executionContext);
+  };
+}
 
 // Add middleware for request ID
 app.use('*', requestId());

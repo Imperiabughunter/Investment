@@ -41,6 +41,13 @@ const adapter = NeonAdapter(pool);
 
 const app = new Hono();
 
+// Fix for "app.fetch is not a function" error
+if (!app.fetch) {
+  app.fetch = function(request, env, executionContext) {
+    return this.request(request, env, executionContext);
+  };
+}
+
 app.use('*', requestId());
 
 app.use('*', (c, next) => {
